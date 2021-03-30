@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CSV to API</title>
+
+    <!-- CSS only -->
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta2/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+      integrity="sha384-BmbxuPwQa2lc/FVzBcNJ7UAyJxM6wuqIj61tLrc4wSX0szH/Ev+nYRRuWlolflfl"
+      crossorigin="anonymous"
+    />
+    <!-- JavaScript Bundle with Popper -->
+    <script
+      src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta2/dist/js/bootstrap.bundle.min.js"
+      integrity="sha384-b5kHyXgcpbZJO/tY9Ul7kGkf1S0CWuKcCD38l8YkeH8z8QjE0GmW1gYU5S9FOnJ0"
+      crossorigin="anonymous"
+    ></script>
+  </head>
+  <body>
+    <div class="container py-5">
+      <div class="row">
+        <div class="col-6">
+          <textarea id="raw" class="form-control" rows="5"></textarea>
+          <button id="peek" class="btn btn-primary">Stage</button>
+          <hr />
+          <h5 id="counter"></h5>
+          <button class="btn btn-primary btn-sm" id="prev">prev</button>
+          <button class="btn btn-primary btn-sm" id="next">next</button>
+          <button class="btn btn-warning" id="send">Send to DB</button>
+          <div class="alert alert-warning my-3" id="alert"></div>
+        </div>
+        <div class="col-6">
+          <input class="form-control is-invalid" type="text" id="date_applied" placeholder="date_applied" />
+          <input class="form-control" type="text" id="referral" placeholder="referral" />
+          <input class="form-control is-invalid" type="text" id="appliying_for" placeholder="appliying_for" />
+          <input class="form-control is-invalid" type="text" id="lname" placeholder="lname" />
+          <input class="form-control is-invalid" type="text" id="fname" placeholder="fname" />
+          <input class="form-control is-invalid" type="text" id="mname" placeholder="mname" />
+          <input class="form-control is-invalid" type="text" id="sex" placeholder="sex" />
+          <input class="form-control is-invalid" type="text" id="civil_status" placeholder="civil_status" />
+          <input class="form-control is-invalid" type="text" id="birthdate" placeholder="birthdate" />
+          <input class="form-control is-invalid" type="number" id="age" placeholder="age" />
+          <input class="form-control is-invalid" type="text" id="birthplace" placeholder="birthplace" />
+          <input class="form-control is-invalid" type="text" id="curr_place" placeholder="curr_place" />
+          <input class="form-control is-invalid" type="text" id="contact_num" placeholder="contact_num" />
+          <input class="form-control" type="text" id="email" placeholder="email" />
+          <input class="form-control is-invalid" type="text" id="nth_edu_attain" placeholder="nth_edu_attain" />
+          <input class="form-control is-invalid" type="text" id="school" placeholder="school" />
+          <input class="form-control is-invalid" type="text" id="acad_track" placeholder="acad_track" />
+          <input class="form-control is-invalid" type="number" id="grad_year" placeholder="grad_year" />
+          <input class="form-control" type="text" id="last_employer" placeholder="last_employer" />
+          <input class="form-control" type="text" id="position_held" placeholder="position_held" />
+          <input class="form-control" type="text" id="serv_duration" placeholder="serv_duration" />
+          <input class="form-control" type="text" id="appli_status" placeholder="appli_status" />
+        </div>
+      </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js" integrity="sha256-9/aliU8dGd2tb6OSsuzixeV4y/faTqgFtohetphbbj0=" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script
+      src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"
+      integrity="sha512-qTXRIMyZIFb8iQcfjXWCO8+M5Tbc38Qi5WzdPOYZHIlZpzBHG3L3by84BBBOiRGiEb7KKtAOAs5qYdUiZiQNNQ=="
+      crossorigin="anonymous"
+    ></script>
+    <script src="jquery-CSV.js"></script>
+
+    <script>
+      var parsed;
+      var curr = 0;
+
+      function fillUpForm(obj) {
+        $("#counter").html(`Showing #${curr} of ${parsed.length - 1}`);
+        Object.entries(obj).forEach(function (e) {
+          switch (e[0]) {
+            case "date_applied":
+              $(`#${e[0]}`).val(moment(e[1], "DD-MMM-YY").format("YYYY-MM-DD"));
+              break;
+            case "birthdate":
+              $(`#${e[0]}`).val(moment(e[1], "DD-MMM-YY").format("YYYY-MM-DD"));
+              $("#age").val(moment().diff(moment(e[1], "DD-MMM-YY"), "years"));
+              break;
+            case "contact_num":
+              $(`#${e[0]}`).val(`0${e[1]}`);
+              break;
+            default:
+              $(`#${e[0]}`).val(e[1]);
+          }
+        });
+      }
+
+      $("#next").on("click", function () {
+        curr++;
+        fillUpForm(parsed[curr]);
+      });
+      $("#prev").on("click", function () {
+        curr--;
+        fillUpForm(parsed[curr]);
+      });
+
+      $("#peek").on("click", function () {
+        parsed = $.csv.toObjects($("#raw").val(), { separator: ";" });
+        fillUpForm(parsed[curr]);
+      });
+
+      $("#send").on("click", function () {
+        let data = {
+          date_applied: $("#date_applied").val(),
+          referral: $("#referral").val(),
+          applying_for: $("#appliying_for").val(),
+          lname: $("#lname").val(),
+          fname: $("#fname").val(),
+          mname: $("#mname").val(),
+          sex: $("#sex").val(),
+          civil_status: $("#civil_status").val(),
+          birthdate: $("#birthdate").val(),
+          age: parseInt($("#age").val()),
+          birthplace: $("#birthplace").val(),
+          resi_address: "N/A",
+          perm_address: $("#curr_place").val(),
+          contact_num: $("#contact_num").val(),
+          email: $("#email").val(),
+          nth_edu_attain: $("#nth_edu_attain").val(),
+          school: $("#school").val(),
+          acad_track: $("#acad_track").val(),
+          grad_year: parseInt($("#grad_year").val()),
+          last_employer: $("#last_employer").val(),
+          position_held: $("#position_held").val(),
+          serv_duration: parseInt($("#serv_duration").val()),
+          appli_status: $("#appli_status").val() || "N/A",
+        };
+        console.log(data);
+
+        axios
+          .post("http://192.168.50.35:1337/applicants", data, {
+            headers: {
+              Authorization:
+                "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjYwMzVjYmYxMDI3NDE0MDAwZWMxM2FhNCIsImlhdCI6MTYxNDE0ODQ0MCwiZXhwIjoxNjE2NzQwNDQwfQ.qshoMvhsdrKJsM6r30gTvm5FcuuGzEwN10hkaZ9E8IE",
+            },
+          })
+          .then((res) => {
+            console.log(res);
+            $("#alert").html("Record was added");
+          })
+          .catch((err) => {
+            console.log(err);
+            $("#alert").html(err);
+          });
+      });
+    </script>
+  </body>
+</html>
